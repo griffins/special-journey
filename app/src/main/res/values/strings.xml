@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Uhai</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_mapping">Clinical Facilities</string>
+    <string name="token">AIzaSyBlynFFryYdix9kQaE7GwYqXzAcu_NC3KI</string>
+ <string name="hint">Hint</string>
+    <string name="server_url">dsdd</string>
+</resources>
