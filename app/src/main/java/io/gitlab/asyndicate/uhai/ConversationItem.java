@@ -54,6 +54,10 @@ public class ConversationItem implements GenericListItemInterface {
         this.peek = lineTotal;
     }
 
+    public int getFlags() {
+        return data;
+    }
+
     public void setFlags(int data) {
         this.data = data;
     }

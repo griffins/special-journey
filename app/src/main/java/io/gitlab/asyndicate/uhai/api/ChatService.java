@@ -4,11 +4,16 @@ package io.gitlab.asyndicate.uhai.api;
 import android.app.IntentService;
 import android.content.Intent;
 import android.support.annotation.Nullable;
+import android.util.Base64;
 import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.URISyntaxException;
 
 import io.gitlab.asyndicate.uhai.Settings;
@@ -24,7 +29,7 @@ public class ChatService extends IntentService {
     }
 
     void start() throws URISyntaxException {
-        io = IO.socket("http://10.1.16.244:8080");
+        io = IO.socket("http://10.1.5.44:8080");
         io.on(Socket.EVENT_CONNECT, new Emitter.Listener() {
             public void call(Object... args) {
                 setNick();
@@ -48,7 +53,7 @@ public class ChatService extends IntentService {
                 intent.putExtra("message", response.toString());
                 intent.setAction("message");
                 sendBroadcast(intent);
-                Log.d("Messages", response.toString());
+                Log.d("Messages", "Sending intent");
             }
         });
         io.connect();
@@ -82,6 +87,25 @@ public class ChatService extends IntentService {
                         message.put("destination", intent.getStringExtra("destination"));
                         io.emit("message", message);
                     } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else if (intent.getAction().contentEquals("photo")) {
+                    File originalFile = new File(intent.getStringExtra("file"));
+                    String encodedBase64;
+                    try {
+                        FileInputStream fileInputStreamReader = new FileInputStream(originalFile);
+                        byte[] bytes = new byte[(int) originalFile.length()];
+                        fileInputStreamReader.read(bytes);
+                        encodedBase64 = new String(Base64.encode(bytes, 0));
+                        JSONObject message = new JSONObject();
+                        try {
+                            message.put("type", "decode");
+                            message.put("payload", encodedBase64);
+                            io.emit("message", message);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }

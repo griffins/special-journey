@@ -5,4 +5,10 @@
     <string name="token">AIzaSyBlynFFryYdix9kQaE7GwYqXzAcu_NC3KI</string>
  <string name="hint">Hint</string>
     <string name="server_url">dsdd</string>
+    <string name="date_picker_title">Select date</string>
+    <string name="camera">Camera</string>
+    <string name="persons">Diet partners</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="send">Send</string>
 </resources>

@@ -13,6 +13,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import io.gitlab.asyndicate.uhai.api.ChatService;
 
@@ -57,7 +58,7 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
             holder.primaryText.setText(getItem(position).getPrimaryText());
             holder.secondaryText.setText(getItem(position).getSecondaryText());
 
-            if (position % 2 == 0) {
+            if (((ConversationItem) getItem(position)).getFlags() == 0) {
                 holder.getView().setBackgroundColor(holder.getView().getContext().getResources().getColor(R.color.divider));
             } else {
                 holder.getView().setBackgroundColor(Color.WHITE);
@@ -133,6 +134,13 @@ public class ChatListAdapter extends RecyclerView.Adapter<ChatListAdapter.ViewHo
                         intent.setAction("send");
                         intent.putExtra("message", mesaage.getText().toString());
                         intent.putExtra("destination", ChatListAdapter.this.conversationIp);
+
+                        ConversationItem item = new ConversationItem();
+                        item.setTitle(mesaage.getText().toString());
+                        item.setPeek((new Date()).toString());
+                        item.setFlags(0);
+                        add(item);
+
                         view.getContext().startService(intent);
                         mesaage.setText("");
                     }

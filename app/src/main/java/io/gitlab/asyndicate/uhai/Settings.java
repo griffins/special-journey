@@ -1,6 +1,9 @@
 package io.gitlab.asyndicate.uhai;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.util.Log;
 
 
@@ -96,6 +99,85 @@ public class Settings {
             in.close();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void LoadImage(String path, int width, PayloadRunnable runnable) {
+        new LoadImageTask(mContext, path, width, runnable).execute();
+    }
+
+    public void LoadImage(int res, int width, PayloadRunnable runnable) {
+        Log.d("Image", "attempting to decode image");
+        new LoadImageTask(mContext, res, width, runnable).execute();
+    }
+
+    public class LoadImageTask extends AsyncTask<Void, Void, Object> {
+
+        private int requestWidth;
+        private int imageResource;
+        private String imagePath;
+        private Context mContext;
+        private Bitmap bitmap;
+        private PayloadRunnable afterRunable;
+
+        public LoadImageTask(Context context, int resource, int requestWidth, PayloadRunnable afterRubbale) {
+            this.mContext = context;
+            this.imageResource = resource;
+            this.requestWidth = requestWidth;
+            this.afterRunable = afterRubbale;
+        }
+
+        public LoadImageTask(Context context, String path, int requestWidth, PayloadRunnable afterRubbale) {
+            this.mContext = context;
+            this.imagePath = path;
+            this.requestWidth = requestWidth;
+            this.afterRunable = afterRubbale;
+        }
+
+        @Override
+        protected Bitmap doInBackground(Void... voids) {
+            try {
+                int w = requestWidth;
+                int h = 0;
+                BitmapFactory.Options op = new BitmapFactory.Options();
+                op.inJustDecodeBounds = true;
+                if (imageResource != 0) {
+                    BitmapFactory.decodeResource(mContext.getResources(), imageResource, op);
+                } else {
+                    BitmapFactory.decodeFile(imagePath, op);
+                }
+
+                if (w != 0) {
+                    h = w * op.outHeight / op.outWidth;
+                } else if (h != 0) {
+                    w = h * op.outWidth / op.outHeight;
+                } else {
+                    w = 1;
+                    h = 1;
+                }
+                op.inSampleSize = Math.max(op.outWidth / w, op.outHeight / h);
+                op.inJustDecodeBounds = false;
+
+                if (imageResource != 0) {
+                    bitmap = BitmapFactory.decodeResource(mContext.getResources(), imageResource, op);
+                } else {
+                    bitmap = BitmapFactory.decodeFile(imagePath, op);
+                }
+                return bitmap;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            if (afterRunable != null && bitmap != null) {
+                Log.d("Image", "Image decoded running  afterCallback");
+                afterRunable.run(bitmap);
+            } else {
+                Log.d("Image", "Invalid image");
+            }
         }
     }
 }

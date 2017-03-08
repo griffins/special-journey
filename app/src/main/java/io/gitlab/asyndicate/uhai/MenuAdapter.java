@@ -7,10 +7,10 @@ import android.view.ViewGroup;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-
 
 
 public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
@@ -41,6 +41,9 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
                 break;
             case 5:
                 convertView = inflater.inflate(R.layout.menu_item, parent, false);
+                break;
+            case 6:
+                convertView = inflater.inflate(R.layout.check_item, parent, false);
                 break;
             case 7:
                 convertView = inflater.inflate(R.layout.desc_item, parent, false);
@@ -76,6 +79,23 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
             case 5:
                 holder.primaryText.setText(getItem(position).getPrimaryText());
                 holder.primaryImage.setImageResource(getItem(position).getIcon());
+                break;
+            case 6:
+                holder.primaryText.setText(getItem(position).getPrimaryText());
+                if (getItem(position).getValue() != null) {
+                    holder.primaryRadio.setChecked((Boolean) getItem(position).getValue());
+                } else {
+                    holder.primaryRadio.setChecked(false);
+                }
+                holder.primaryRadio.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                    @Override
+                    public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                        getItem(position).setValue(b);
+                        if (getItem(position).getAction() != null) {
+                            getItem(position).getAction().run(getItem(position));
+                        }
+                    }
+                });
                 break;
             case 1:
             case 2:
@@ -120,6 +140,8 @@ public class MenuAdapter extends RecyclerView.Adapter<MenuAdapter.ViewHolder> {
             primaryText = (TextView) view.findViewById(R.id.primaryText);
             if (type != MenuItem.TYPES.SECTION_CHECK) {
                 secondaryText = (TextView) view.findViewById(R.id.secondaryText);
+            } else {
+                primaryRadio = (CheckBox) view.findViewById(R.id.primaryRadio);
             }
             if (type == MenuItem.TYPES.SECTION_MENU) {
                 primaryImage = (ImageView) view.findViewById(R.id.primaryImage);

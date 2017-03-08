@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.graphics.drawable.DrawerArrowDrawable;
@@ -17,25 +18,34 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.afollestad.materialcamera.MaterialCamera;
 import com.jeremyfeinstein.slidingmenu.lib.CustomViewAbove;
 import com.jeremyfeinstein.slidingmenu.lib.SlidingMenu;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import io.gitlab.asyndicate.uhai.api.ChatService;
 
 public class Home extends AppCompatActivity {
     private static final String TAG = "Home";
+    private static final int CAMERA_RQ = 90;
     private DrawerArrowDrawable drawerArrowDrawable;
     private SlidingMenu slidingMenu;
     FloatingActionButton fab;
-    private int currentPage = 0;
+    public int currentPage = 0;
     BroadcastReceiver receiver;
     Connect connect;
+    public Dietary dietary;
+    public Notification home;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +93,17 @@ public class Home extends AppCompatActivity {
             case android.R.id.home:
                 slidingMenu.toggle(true);
                 break;
+            case R.id.camera:
+                new MaterialCamera(this)
+                        .stillShot() // launches the Camera in stillshot mode
+                        .start(CAMERA_RQ);
+                break;
+            case R.id.save:
+                Snackbar.make(slidingMenu, "Medication Saved", Snackbar.LENGTH_SHORT).show();
+                currentPage = Pages.HOME;
+                invalidateOptionsMenu();
+                getSupportFragmentManager().beginTransaction().replace(R.id.container, home).commit();
+                setTitle("Home");
         }
         return true;
     }
@@ -127,6 +148,27 @@ public class Home extends AppCompatActivity {
 
         MenuItem menuItem = new MenuItem();
         menuItem.setType(MenuItem.TYPES.SECTION_MENU);
+        menuItem.setIcon(R.drawable.ic_home);
+        menuItem.setPrimaryText("Home");
+        menuItem.setAction(new PayloadRunnable() {
+                               @Override
+                               public Object run(Object result) {
+                                   getSupportFragmentManager().beginTransaction().replace(R.id.container, home).commit();
+                                   setTitle("Home");
+                                   slidingMenu.toggle(true);
+                                   currentPage = Pages.HOME;
+                                   supportInvalidateOptionsMenu();
+                                   return true;
+                               }
+                           }
+
+        );
+
+        menuItem.setSecondaryText("");
+
+        menuAdapter.add(menuItem);
+        menuItem = new MenuItem();
+        menuItem.setType(MenuItem.TYPES.SECTION_MENU);
         menuItem.setIcon(R.drawable.ic_message);
         menuItem.setPrimaryText("Connect");
         menuItem.setAction(new PayloadRunnable() {
@@ -154,12 +196,12 @@ public class Home extends AppCompatActivity {
         menuItem.setAction(new PayloadRunnable() {
                                @Override
                                public Object run(Object result) {
-                                   Connect connect = new Connect();
-                                   connect.setHomeActivity(Home.this);
-                                   getSupportFragmentManager().beginTransaction().replace(R.id.container, connect).commit();
+                                   dietary = new Dietary();
+                                   dietary.setHomeActivity(Home.this);
+                                   getSupportFragmentManager().beginTransaction().replace(R.id.container, dietary).commit();
                                    setTitle("Dietary");
                                    slidingMenu.toggle(true);
-                                   currentPage = Home.Pages.CONNECT;
+                                   currentPage = Pages.DIET;
                                    supportInvalidateOptionsMenu();
                                    return true;
                                }
@@ -176,12 +218,11 @@ public class Home extends AppCompatActivity {
         menuItem.setAction(new PayloadRunnable() {
                                @Override
                                public Object run(Object result) {
-                                   Connect connect = new Connect();
-                                   connect.setHomeActivity(Home.this);
-                                   getSupportFragmentManager().beginTransaction().replace(R.id.container, connect).commit();
-                                   setTitle("Dietary");
+                                   Medication medication = new Medication();
+                                   getSupportFragmentManager().beginTransaction().replace(R.id.container, medication).commit();
+                                   setTitle("Medication");
                                    slidingMenu.toggle(true);
-                                   currentPage = Home.Pages.CONNECT;
+                                   currentPage = Home.Pages.MEDICATION;
                                    supportInvalidateOptionsMenu();
                                    return true;
                                }
@@ -189,6 +230,24 @@ public class Home extends AppCompatActivity {
 
         );
 
+        menuItem.setSecondaryText("");
+
+        menuAdapter.add(menuItem);
+
+
+        menuItem = new MenuItem();
+        menuItem.setType(MenuItem.TYPES.SECTION_MENU);
+        menuItem.setIcon(R.drawable.ic_shop);
+        menuItem.setPrimaryText("Shop");
+
+        menuItem.setSecondaryText("");
+
+        menuAdapter.add(menuItem);
+
+        menuItem = new MenuItem();
+        menuItem.setType(MenuItem.TYPES.SECTION_MENU);
+        menuItem.setIcon(R.drawable.ic_pharmacy);
+        menuItem.setPrimaryText("Pharmacy");
         menuItem.setSecondaryText("");
 
         menuAdapter.add(menuItem);
@@ -201,15 +260,29 @@ public class Home extends AppCompatActivity {
         }
         connect = new Connect();
         connect.setHomeActivity(Home.this);
-        getSupportFragmentManager().beginTransaction().replace(R.id.container, connect).commit();
-        setTitle("Connect");
-        currentPage = Home.Pages.CONNECT;
+        home = new Notification();
+
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, home).commit();
+        setTitle("Notifications");
+        currentPage = Pages.HOME;
         supportInvalidateOptionsMenu();
 
         receiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                connect.update(intent.getStringExtra("message"));
+                try {
+                    JSONObject object = new JSONObject(intent.getStringExtra("message"));
+                    if (object.getString("type").equalsIgnoreCase("food")) {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(Home.this);
+                        builder.setTitle("Your last photo!");
+                        builder.setMessage(object.getString("payload"));
+                        builder.show();
+                    } else {
+                        connect.update(intent.getStringExtra("message"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         };
 
@@ -222,11 +295,36 @@ public class Home extends AppCompatActivity {
         int HOME = 0;
         int CONNECT = 1;
         int DIET = 2;
+        int MEDICATION = 3;
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(receiver);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (Pages.DIET == currentPage) {
+            getMenuInflater().inflate(R.menu.camera, menu);
+        } else if (Pages.MEDICATION == currentPage) {
+            getMenuInflater().inflate(R.menu.medication, menu);
+        }
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        // Received recording or error from MaterialCamera
+        if (requestCode == CAMERA_RQ) {
+            if (resultCode == RESULT_OK) {
+                dietary.loadImage(data.getDataString());
+            } else if (data != null) {
+                Toast.makeText(this, "Prototype dead due to whatever", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }

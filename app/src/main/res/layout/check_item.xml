@@ -16,13 +16,10 @@
         android:textColor="@android:color/black"
         android:textSize="16sp" />
 
-    <TextView
-        android:id="@+id/secondaryText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="\@oringo"
-        android:layout_marginRight="@dimen/medium"
-        android:textColor="@color/colorPrimaryDark"
-        android:textSize="16sp" />
+    <CheckBox
+        android:id="@+id/primaryRadio"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:clickable="true" />
 
 </LinearLayout>

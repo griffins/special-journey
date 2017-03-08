@@ -43,35 +43,39 @@ public class Connect extends Fragment implements HomeAccess {
     }
 
     public void update(String message) {
-        try {
-            JSONObject object = new JSONObject(message);
-            if (object.getString("type").equalsIgnoreCase("nicks")) {
-                adapter.clear();
-                JSONArray people = object.getJSONArray("payload");
-                for (int x = 0; x < people.length(); x++) {
-                    JSONObject person = people.getJSONObject(x);
-                    final ConversationItem item = new ConversationItem();
-                    item.setTitle(person.getString("name"));
-                    item.setPeek(person.getString("ip"));
-                    item.setAction(new PayloadRunnable() {
-                        @Override
-                        public Object run(Object result) {
-                            chat = new Chat();
-                            chat.setHomeActivity(home);
-                            home.setTitle(item.getTitle());
-                            chat.setConversation(item.getPrimaryText());
-                            chat.setConversationIp(item.getSecondaryText());
-                            home.getSupportFragmentManager().beginTransaction().replace(R.id.container, chat).commit();
-                            return null;
-                        }
-                    });
-                    adapter.add(item);
+        if (adapter != null) {
+            try {
+                JSONObject object = new JSONObject(message);
+                if (object.getString("type").equalsIgnoreCase("nicks")) {
+                    adapter.clear();
+                    JSONArray people = object.getJSONArray("payload");
+                    for (int x = 0; x < people.length(); x++) {
+                        JSONObject person = people.getJSONObject(x);
+                        final ConversationItem item = new ConversationItem();
+                        item.setTitle(person.getString("name"));
+                        item.setPeek(person.getString("ip"));
+                        item.setAction(new PayloadRunnable() {
+                            @Override
+                            public Object run(Object result) {
+                                chat = new Chat();
+                                chat.setHomeActivity(home);
+                                home.setTitle(item.getTitle());
+                                chat.setConversation(item.getPrimaryText());
+                                chat.setConversationIp(item.getSecondaryText());
+                                home.getSupportFragmentManager().beginTransaction().replace(R.id.container, chat).commit();
+                                return null;
+                            }
+                        });
+                        adapter.add(item);
+                    }
+                } else if (object.getString("type").equalsIgnoreCase("text") && chat != null) {
+                    chat.update(message);
                 }
-            } else if (object.getString("type").equalsIgnoreCase("text") && chat != null) {
-                chat.update(message);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
+        } else {
+            Log.d("TAG", "Adapter null");
         }
     }
 

@@ -56,14 +56,15 @@ public class Chat extends Fragment implements HomeAccess {
     }
 
     public void update(String message) {
-        Log.d("Messages", message);
         try {
             JSONObject object = new JSONObject(message);
-            if (object.getString("type").equalsIgnoreCase("text")) {
-                if (object.getString("from").equalsIgnoreCase(conversationIp)) {
+            if (object.getString("type").equalsIgnoreCase("text") && object.has("to")) {
+                if (object.getString("from").equalsIgnoreCase(conversationIp) && object.getString("to").toLowerCase().equalsIgnoreCase(Settings.getString("name"))) {
+                    Log.d("Messages", message);
                     ConversationItem item = new ConversationItem();
                     item.setTitle(object.getString("payload"));
                     item.setPeek((new Date()).toString());
+                    item.setFlags(1);
                     adapter.add(item);
                 }
             }
